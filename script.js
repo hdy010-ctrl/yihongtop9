@@ -1,4 +1,3 @@
-const TOTAL = 59;
 const GROUP_SIZE = 4;
 const MIN_REMAIN = 19;
 
@@ -26,20 +25,17 @@ function shuffle(array) {
 
 
 function createPhotos() {
-    photos = [];
 
-    for (let i = 1; i <= TOTAL; i++) {
-        const number = String(i).padStart(2, "0");
-
-        photos.push({
-            id: i,
-            src: `images/${number}.jpg`
-        });
-    }
+    photos = dataSet[dataSetVersion].characterData.map(
+        (character, index) => ({
+            id: index,
+            name: character.name,
+            src: character.img
+        })
+    );
 
     photos = shuffle(photos);
 }
-
 
 function startGame() {
     createPhotos();
