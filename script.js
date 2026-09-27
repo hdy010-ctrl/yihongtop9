@@ -1,293 +1,684 @@
-const GROUP_SIZE = 4;
-const MIN_REMAIN = 19;
+let allCharacters = [];
 
-let photos = [];
-let groups = [];
-let currentGroup = 0;
-let selected = [];
-let finalists = [];
+let currentRound = [];
 
-let battlePairs = [];
-let currentBattle = 0;
-let ranking = [];
+let nextRound = [];
 
+let currentGroup = [];
+
+let groupIndex = 0;
+
+let totalGroups = 0;
+
+let roundNumber = 1;
+
+let finalWinners = [];
+
+
+/* =========================
+   随机打乱
+========================= */
 
 function shuffle(array) {
-    let arr = [...array];
 
-    for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
+    const result = [...array];
 
-    return arr;
-}
+    for (
+        let i = result.length - 1;
+        i > 0;
+        i--
+    ) {
 
-
-function createPhotos() {
-
-    photos = dataSet[dataSetVersion].characterData.map(
-        (character, index) => ({
-            id: index,
-            name: character.name,
-            src: character.img
-        })
-    );
-
-    photos = shuffle(photos);
-}
-
-function startGame() {
-    createPhotos();
-    createGroups();
-
-    document.getElementById("startPage")
-        .classList.add("hidden");
-
-    document.getElementById("round1")
-        .classList.remove("hidden");
-
-    showGroup();
-}
-
-
-function createGroups() {
-    groups = [];
-
-    for (let i = 0; i < photos.length; i += GROUP_SIZE) {
-        groups.push(
-            photos.slice(i, i + GROUP_SIZE)
-        );
-    }
-}
-
-
-function showGroup() {
-    const group = groups[currentGroup];
-
-    document.getElementById("roundInfo").innerText =
-        `第 ${currentGroup + 1} / ${groups.length} 组`;
-
-    selected = [];
-
-    updateSelectedInfo();
-
-    const container =
-        document.getElementById("group");
-
-    container.innerHTML = "";
-
-    group.forEach(photo => {
-
-        const card = document.createElement("div");
-
-        card.className = "card";
-
-        card.innerHTML = `
-            <img src="${photo.src}">
-        `;
-
-        card.onclick = () => {
-
-            if (selected.includes(photo.id)) {
-
-                selected =
-                    selected.filter(id => id !== photo.id);
-
-                card.classList.remove("selected");
-
-            } else {
-
-                selected.push(photo.id);
-
-                card.classList.add("selected");
-            }
-
-            updateSelectedInfo();
-        };
-
-        container.appendChild(card);
-    });
-}
-
-
-function updateSelectedInfo() {
-    document.getElementById("selectedInfo").innerText =
-        `本轮选择 ${selected.length} 张`;
-}
-
-
-function nextGroup() {
-
-    const group = groups[currentGroup];
-
-    group.forEach(photo => {
-
-        if (selected.includes(photo.id)) {
-            finalists.push(photo);
-        }
-    });
-
-    currentGroup++;
-
-    if (currentGroup >= groups.length) {
-        finishRound1();
-    } else {
-        showGroup();
-    }
-}
-
-
-function finishRound1() {
-
-    if (finalists.length < MIN_REMAIN) {
-
-        const notSelected =
-            photos.filter(photo =>
-                !finalists.some(
-                    x => x.id === photo.id
-                )
+        const j =
+            Math.floor(
+                Math.random() * (i + 1)
             );
 
-        const need =
-            MIN_REMAIN - finalists.length;
+        [
+            result[i],
+            result[j]
+        ] = [
+            result[j],
+            result[i]
+        ];
+    }
 
-        finalists.push(
-            ...shuffle(notSelected).slice(0, need)
+    return result;
+}
+
+
+/* =========================
+   初始化
+========================= */
+
+function initializeCharacters() {
+
+    allCharacters =
+        dataSet[
+            dataSetVersion
+        ].characterData.map(
+            (character, index) => ({
+
+                id: index,
+
+                name:
+                    character.name,
+
+                img:
+                    character.img
+
+            })
         );
+
+}
+
+
+/* =========================
+   开始
+========================= */
+
+document
+    .getElementById("startButton")
+    .addEventListener(
+        "click",
+        startGame
+    );
+
+
+function startGame() {
+
+    initializeCharacters();
+
+    currentRound =
+        shuffle(allCharacters);
+
+    roundNumber = 1;
+
+    startRound();
+
+}
+
+
+/* =========================
+   根据人数决定每组大小
+========================= */
+
+function getGroupSize(count) {
+
+    if (count > 30) {
+
+        return 4;
+
     }
 
-    finalists = shuffle(finalists);
+    if (count > 15) {
 
-    startBattle();
+        return 3;
+
+    }
+
+    if (count > 9) {
+
+        return 2;
+
+    }
+
+    return 1;
+
 }
 
 
-function startBattle() {
+/* =========================
+   开始一轮
+========================= */
 
-    document.getElementById("round1")
-        .classList.add("hidden");
+function startRound() {
 
-    document.getElementById("round2")
-        .classList.remove("hidden");
+    nextRound = [];
 
-    ranking = [];
-    currentBattle = 0;
+    groupIndex = 0;
 
-    createBattlePairs();
+    const groupSize =
+        getGroupSize(
+            currentRound.length
+        );
 
-    showBattle();
+
+    /*
+       把当前轮选手随机打乱
+    */
+
+    currentRound =
+        shuffle(currentRound);
+
+
+    /*
+       分组
+    */
+
+    const groups = [];
+
+
+    for (
+        let i = 0;
+        i < currentRound.length;
+        i += groupSize
+    ) {
+
+        groups.push(
+            currentRound.slice(
+                i,
+                i + groupSize
+            )
+        );
+
+    }
+
+
+    window.currentGroups = groups;
+
+    totalGroups =
+        groups.length;
+
+
+    /*
+       显示游戏页面
+    */
+
+    document
+        .getElementById("startScreen")
+        .classList.add(
+            "hidden"
+        );
+
+    document
+        .getElementById("resultScreen")
+        .classList.add(
+            "hidden"
+        );
+
+    document
+        .getElementById("gameScreen")
+        .classList.remove(
+            "hidden"
+        );
+
+
+    showGroup();
+
 }
 
 
-function createBattlePairs() {
+/* =========================
+   显示一组
+========================= */
 
-    battlePairs = [];
+function showGroup() {
 
-    let list = shuffle(finalists);
+    const group =
+        window.currentGroups[
+            groupIndex
+        ];
 
-    for (let i = 0; i < list.length; i += 2) {
 
-        if (list[i + 1]) {
+    document
+        .getElementById("roundTitle")
+        .textContent =
+        `ROUND ${roundNumber}`;
 
-            battlePairs.push([
-                list[i],
-                list[i + 1]
-            ]);
+
+    document
+        .getElementById("progress")
+        .textContent =
+        `${groupIndex + 1} / ${totalGroups}`;
+
+
+    document
+        .getElementById("groupNumber")
+        .textContent =
+        `GROUP ${groupIndex + 1}`;
+
+
+    const container =
+        document
+            .getElementById(
+                "groupContainer"
+            );
+
+
+    container.innerHTML = "";
+
+
+    /*
+       如果最后剩下的人不足标准组大小，
+       就全部放出来。
+    */
+
+
+    group.forEach(
+        character => {
+
+            const card =
+                document.createElement(
+                    "div"
+                );
+
+
+            card.className =
+                "photoCard";
+
+
+            card.innerHTML = `
+
+                <img
+                    src="${character.img}"
+                    alt="${character.name}"
+                >
+
+                <div class="photoName">
+                    ${character.name}
+                </div>
+
+            `;
+
+
+            card.addEventListener(
+                "click",
+                () => {
+
+                    chooseCharacter(
+                        character
+                    );
+
+                }
+            );
+
+
+            container.appendChild(
+                card
+            );
+
         }
-    }
+    );
+
 }
 
 
-function showBattle() {
+/* =========================
+   选择一个
+========================= */
 
-    if (currentBattle >= battlePairs.length) {
-        finishBattle();
+function chooseCharacter(character) {
+
+    /*
+       当前组只有一个胜者
+    */
+
+    nextRound.push(
+        character
+    );
+
+
+    /*
+       下一组
+    */
+
+    groupIndex++;
+
+
+    if (
+        groupIndex <
+        totalGroups
+    ) {
+
+        showGroup();
+
         return;
+
     }
 
-    const pair =
-        battlePairs[currentBattle];
 
-    document.getElementById("battleInfo").innerText =
-        `第 ${currentBattle + 1} / ${battlePairs.length} 组`;
+    /*
+       本轮结束
+    */
 
-    const container =
-        document.getElementById("battle");
+    finishRound();
 
-    container.innerHTML = "";
-
-    pair.forEach(photo => {
-
-        const card =
-            document.createElement("div");
-
-        card.className = "battleCard";
-
-        card.innerHTML = `
-            <img src="${photo.src}">
-        `;
-
-        card.onclick = () => {
-
-            ranking.push(photo);
-
-            currentBattle++;
-
-            showBattle();
-        };
-
-        container.appendChild(card);
-    });
 }
 
 
-function finishBattle() {
+/* =========================
+   一轮结束
+========================= */
 
-    finalists.forEach(photo => {
+function finishRound() {
 
-        if (!ranking.some(
-            x => x.id === photo.id
-        )) {
-            ranking.push(photo);
+    /*
+       本轮晋级人数
+    */
+
+    const winners =
+        shuffle(nextRound);
+
+
+    /*
+       如果已经 <= 9
+       进入最终排名
+    */
+
+    if (
+        winners.length <= 9
+    ) {
+
+        startFinalRanking(
+            winners
+        );
+
+        return;
+
+    }
+
+
+    /*
+       继续下一轮
+    */
+
+    currentRound =
+        winners;
+
+    roundNumber++;
+
+    startRound();
+
+}
+
+
+/* =========================
+   最终9人排名
+========================= */
+
+function startFinalRanking(winners) {
+
+    /*
+       这里开始真正决定
+       TOP 9 的顺序。
+    */
+
+    finalWinners =
+        shuffle(winners);
+
+
+    /*
+       先做第一名
+    */
+
+    rankNextPerson(
+        finalWinners
+    );
+
+}
+
+
+/* =========================
+   逐个决定最终排名
+========================= */
+
+function rankNextPerson(list) {
+
+    if (
+        list.length === 0
+    ) {
+
+        showResult();
+
+        return;
+
+    }
+
+
+    /*
+       第一名直接通过
+       后面的排序采用
+       逐个插入比较
+    */
+
+    if (
+        !window.finalRanking
+    ) {
+
+        window.finalRanking = [];
+
+    }
+
+
+    /*
+       如果还没有排名，
+       先让第一人进入
+    */
+
+    if (
+        window.finalRanking.length === 0
+    ) {
+
+        window.finalRanking.push(
+            list[0]
+        );
+
+        rankNextPerson(
+            list.slice(1)
+        );
+
+        return;
+
+    }
+
+
+    /*
+       当前需要插入的人
+    */
+
+    const candidate =
+        list[0];
+
+
+    /*
+       从第一名开始比较
+    */
+
+    compareForRanking(
+        candidate,
+        0,
+        list.slice(1)
+    );
+
+}
+
+
+/* =========================
+   排名比较
+========================= */
+
+function compareForRanking(
+    candidate,
+    position,
+    remaining
+) {
+
+    /*
+       已经排到最后
+    */
+
+    if (
+        position >=
+        window.finalRanking.length
+    ) {
+
+        window.finalRanking.push(
+            candidate
+        );
+
+        rankNextPerson(
+            remaining
+        );
+
+        return;
+
+    }
+
+
+    const current =
+        window.finalRanking[
+            position
+        ];
+
+
+    /*
+       暂时使用浏览器弹窗选择
+       这部分下一步可以改成
+       两张大图的漂亮PK界面。
+    */
+
+    const chooseCandidate =
+        confirm(
+            `这一轮比较：\n\n` +
+            `${candidate.name}\n\n` +
+            `vs\n\n` +
+            `${current.name}\n\n` +
+            `确定 = 选择 ${candidate.name}\n` +
+            `取消 = 选择 ${current.name}`
+        );
+
+
+    if (
+        chooseCandidate
+    ) {
+
+        window.finalRanking.splice(
+            position,
+            0,
+            candidate
+        );
+
+        rankNextPerson(
+            remaining
+        );
+
+    } else {
+
+        compareForRanking(
+            candidate,
+            position + 1,
+            remaining
+        );
+
+    }
+
+}
+
+
+/* =========================
+   最终结果
+========================= */
+
+function showResult() {
+
+    const ranking =
+        window.finalRanking
+            .slice(0, 9);
+
+
+    document
+        .getElementById("gameScreen")
+        .classList.add(
+            "hidden"
+        );
+
+    document
+        .getElementById("resultScreen")
+        .classList.remove(
+            "hidden"
+        );
+
+
+    const container =
+        document
+            .getElementById(
+                "resultContainer"
+            );
+
+
+    container.innerHTML = "";
+
+
+    ranking.forEach(
+        (character, index) => {
+
+            const card =
+                document.createElement(
+                    "div"
+                );
+
+
+            card.className =
+                "resultCard";
+
+
+            card.innerHTML = `
+
+                <div class="resultRank">
+                    ${index + 1}
+                </div>
+
+                <img
+                    src="${character.img}"
+                    alt="${character.name}"
+                >
+
+                <div class="resultName">
+                    ${character.name}
+                </div>
+
+            `;
+
+
+            container.appendChild(
+                card
+            );
+
         }
-    });
+    );
 
-    const top9 =
-        ranking.slice(0, 9);
-
-    showResult(top9);
 }
 
 
-function showResult(top9) {
+/* =========================
+   AGAIN
+========================= */
 
-    document.getElementById("round2")
-        .classList.add("hidden");
+document
+    .getElementById("restartButton")
+    .addEventListener(
+        "click",
+        () => {
 
-    document.getElementById("result")
-        .classList.remove("hidden");
+            window.finalRanking =
+                [];
 
-    const container =
-        document.getElementById("resultList");
+            document
+                .getElementById(
+                    "resultScreen"
+                )
+                .classList.add(
+                    "hidden"
+                );
 
-    container.innerHTML = "";
+            document
+                .getElementById(
+                    "startScreen"
+                )
+                .classList.remove(
+                    "hidden"
+                );
 
-    top9.forEach((photo, index) => {
-
-        const card =
-            document.createElement("div");
-
-        card.className = "resultCard";
-
-        card.innerHTML = `
-            <span class="rank">
-                ${index + 1}
-            </span>
-
-            <img src="${photo.src}">
-        `;
-
-        container.appendChild(card);
-    });
-}
+        }
+    );
