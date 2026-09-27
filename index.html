@@ -2,97 +2,150 @@
 <html lang="zh-CN">
 
 <head>
-
     <meta charset="UTF-8">
 
     <meta
         name="viewport"
-        content="width=device-width, initial-scale=1.0"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     >
 
     <title>TOP 9</title>
 
     <link rel="stylesheet" href="style.css">
-
 </head>
 
 <body>
 
-<div id="app">
+    <!-- ==================== 开始页 ==================== -->
 
-    <!-- 开始页面 -->
+    <section id="startScreen" class="screen start-screen">
 
-    <div id="startScreen" class="screen">
+        <div class="start-content">
 
-        <h1>TOP 9</h1>
-
-        <p class="subtitle">
-            59 → 9
-        </p>
-
-        <p class="description">
-            决战一红妆造之最<br>
-            选出你的top9
-        </p>
-
-        <button id="startButton">
-            START
-        </button>
-
-    </div>
-
-
-    <!-- 游戏页面 -->
-
-    <div id="gameScreen" class="screen hidden">
-
-        <div class="header">
-
-            <div id="roundTitle">
-                ROUND 1
+            <div class="small-title">
+                PERSONAL RANKING
             </div>
 
-            <div id="progress">
-                0 / 0
+            <h1>TOP 9</h1>
+
+            <div class="line"></div>
+
+            <p>
+                59 CHARACTERS
+                <br>
+                ONE CHOICE EACH ROUND
+            </p>
+
+            <button id="startButton">
+                START
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- ==================== 游戏页 ==================== -->
+
+    <section id="gameScreen" class="screen game-screen hidden">
+
+        <header class="game-header">
+
+            <div>
+
+                <div id="roundName">
+                    ROUND 1
+                </div>
+
+                <div id="roundDescription">
+                    淘汰赛
+                </div>
+
             </div>
+
+
+            <div class="counter">
+
+                <span id="groupCurrent">
+                    1
+                </span>
+
+                <span class="slash">
+                    /
+                </span>
+
+                <span id="groupTotal">
+                    30
+                </span>
+
+            </div>
+
+        </header>
+
+
+        <div class="progress-bar">
+
+            <div id="progressFill"></div>
 
         </div>
 
 
-        <div id="instruction">
-            请选择你最喜欢的一张
+        <main>
+
+            <div class="instruction">
+                请选择你更喜欢的一张
+            </div>
+
+            <div
+                id="groupContainer"
+                class="group-container"
+            >
+            </div>
+
+        </main>
+
+    </section>
+
+
+    <!-- ==================== TOP 9 ==================== -->
+
+    <section
+        id="resultScreen"
+        class="screen result-screen hidden"
+    >
+
+        <div class="result-title">
+
+            <div class="small-title">
+                FINAL RESULT
+            </div>
+
+            <h1>TOP 9</h1>
+
         </div>
 
 
-        <!-- 当前组 -->
-
-        <div id="groupContainer"></div>
-
-
-        <div id="groupNumber"></div>
-
-    </div>
+        <div
+            id="resultContainer"
+            class="result-container"
+        >
+        </div>
 
 
-    <!-- 结果页面 -->
-
-    <div id="resultScreen" class="screen hidden">
-
-        <h1>TOP 9</h1>
-
-        <div id="resultContainer"></div>
-
-        <button id="restartButton">
+        <button
+            id="againButton"
+            class="again-button"
+        >
             AGAIN
         </button>
 
-    </div>
-
-</div>
+    </section>
 
 
-<script src="data.js"></script>
-<script src="script.js"></script>
+    <!-- 非常重要：data.js 必须在 script.js 前面 -->
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
 
 </body>
 
