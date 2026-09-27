@@ -1,152 +1,60 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    >
-
-    <title>TOP 9</title>
-
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>段奕宏 好き顔9選</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <!-- ==================== 开始页 ==================== -->
+  <!-- 首页 -->
+  <section id="start-screen" class="screen active">
+    <div class="start-content">
+      <div class="title-cn">段奕宏</div>
+      <div class="title-jp">好き顔9選</div>
 
-    <section id="startScreen" class="screen start-screen">
-
-        <div class="start-content">
-
-            <div class="small-title">
-                PERSONAL RANKING
-            </div>
-
-            <h1>TOP 9</h1>
-
-            <div class="line"></div>
-
-            <p>
-                59 CHARACTERS
-                <br>
-                ONE CHOICE EACH ROUND
-            </p>
-
-            <button id="startButton">
-                START
-            </button>
-
-        </div>
-
-    </section>
+      <button id="start-btn">START</button>
+    </div>
+  </section>
 
 
-    <!-- ==================== 游戏页 ==================== -->
+  <!-- 游戏页面 -->
+  <section id="game-screen" class="screen">
 
-    <section id="gameScreen" class="screen game-screen hidden">
+    <div class="game-header">
+      <div id="round-title">ROUND 1</div>
+      <div id="round-subtitle"></div>
+      <div class="progress-wrap">
+        <div id="progress-bar"></div>
+      </div>
+    </div>
 
-        <header class="game-header">
+    <div id="instruction"></div>
 
-            <div>
+    <div id="group-container"></div>
 
-                <div id="roundName">
-                    ROUND 1
-                </div>
-
-                <div id="roundDescription">
-                    淘汰赛
-                </div>
-
-            </div>
-
-
-            <div class="counter">
-
-                <span id="groupCurrent">
-                    1
-                </span>
-
-                <span class="slash">
-                    /
-                </span>
-
-                <span id="groupTotal">
-                    30
-                </span>
-
-            </div>
-
-        </header>
+  </section>
 
 
-        <div class="progress-bar">
+  <!-- 最终排名 -->
+  <section id="result-screen" class="screen">
 
-            <div id="progressFill"></div>
+    <div class="result-title">
+      <div class="result-cn">段奕宏</div>
+      <div class="result-jp">好き顔9選</div>
+    </div>
 
-        </div>
+    <div id="result-grid"></div>
 
+    <button id="again-btn">AGAIN</button>
 
-        <main>
-
-            <div class="instruction">
-                请选择你更喜欢的一张
-            </div>
-
-            <div
-                id="groupContainer"
-                class="group-container"
-            >
-            </div>
-
-        </main>
-
-    </section>
+  </section>
 
 
-    <!-- ==================== TOP 9 ==================== -->
-
-    <section
-        id="resultScreen"
-        class="screen result-screen hidden"
-    >
-
-        <div class="result-title">
-
-            <div class="small-title">
-                FINAL RESULT
-            </div>
-
-            <h1>TOP 9</h1>
-
-        </div>
-
-
-        <div
-            id="resultContainer"
-            class="result-container"
-        >
-        </div>
-
-
-        <button
-            id="againButton"
-            class="again-button"
-        >
-            AGAIN
-        </button>
-
-    </section>
-
-
-    <!-- 非常重要：data.js 必须在 script.js 前面 -->
-
-    <script src="data.js"></script>
-    <script src="script.js"></script>
+  <script src="data.js"></script>
+  <script src="script.js"></script>
 
 </body>
-
 </html>
