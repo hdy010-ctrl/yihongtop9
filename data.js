@@ -1,6 +1,11 @@
-dataSetVersion = "2026-09-27";
+var dataSet = {};
+
+var dataSetVersion = "2018-02-20";
+
 dataSet[dataSetVersion] = {};
+
 dataSet[dataSetVersion].options = [];
+
 dataSet[dataSetVersion].characterData = [
   { name: "向西", img: "IMG_9977.jpeg", opts: {} },
   { name: "皮衣段", img: "IMG_9947.jpeg", opts: {} },
