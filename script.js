@@ -1,889 +1,845 @@
-/* ==================================================
-   TOP 9
-   59 → 30 → 15 → 9
-
-   每组只能选择一个人
-================================================== */
+/* =========================================================
+   段奕宏 好き顔9選
+   59 → 30 → 20 → 10 → 9
+   ========================================================= */
 
 
 /* =========================
-   游戏数据
+   基础数据
 ========================= */
 
-let characters = [];
-
-let currentPlayers = [];
-
-let nextPlayers = [];
-
-let groups = [];
-
-let currentGroupIndex = 0;
-
-let currentRound = 1;
+const characters =
+  dataSet[dataSetVersion].characterData.map(item => ({
+    name: item.name,
+    img: item.img
+  }));
 
 
 /* =========================
    DOM
 ========================= */
 
-const startScreen =
-    document.getElementById("startScreen");
+const startScreen = document.getElementById("start-screen");
+const gameScreen = document.getElementById("game-screen");
+const resultScreen = document.getElementById("result-screen");
 
-const gameScreen =
-    document.getElementById("gameScreen");
+const startBtn = document.getElementById("start-btn");
+const againBtn = document.getElementById("again-btn");
 
-const resultScreen =
-    document.getElementById("resultScreen");
-
-const startButton =
-    document.getElementById("startButton");
-
-const againButton =
-    document.getElementById("againButton");
-
-const groupContainer =
-    document.getElementById("groupContainer");
-
-const roundName =
-    document.getElementById("roundName");
-
-const roundDescription =
-    document.getElementById("roundDescription");
-
-const groupCurrent =
-    document.getElementById("groupCurrent");
-
-const groupTotal =
-    document.getElementById("groupTotal");
-
-const progressFill =
-    document.getElementById("progressFill");
-
-const resultContainer =
-    document.getElementById("resultContainer");
+const roundTitle = document.getElementById("round-title");
+const roundSubtitle = document.getElementById("round-subtitle");
+const instruction = document.getElementById("instruction");
+const progressBar = document.getElementById("progress-bar");
+const groupContainer = document.getElementById("group-container");
+const resultGrid = document.getElementById("result-grid");
 
 
 /* =========================
-   随机排序
+   状态
+========================= */
+
+let players = [];
+let winners = [];
+
+let currentGroups = [];
+let currentGroupIndex = 0;
+
+let thirdRoundPlayers = [];
+let thirdRoundWinners = [];
+
+let rankingPool = [];
+let finalRanking = [];
+
+let locked = false;
+
+
+/* =========================
+   工具
 ========================= */
 
 function shuffle(array) {
+  const arr = [...array];
 
-    const result = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
 
-    for (
-        let i = result.length - 1;
-        i > 0;
-        i--
-    ) {
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
 
-        const j =
-            Math.floor(
-                Math.random() * (i + 1)
-            );
+  return arr;
+}
 
-        [
-            result[i],
-            result[j]
-        ] =
-        [
-            result[j],
-            result[i]
-        ];
-    }
 
-    return result;
+function showScreen(screen) {
+  startScreen.classList.remove("active");
+  gameScreen.classList.remove("active");
+  resultScreen.classList.remove("active");
+
+  screen.classList.add("active");
 }
 
 
 /* =========================
-   读取你的 data.js
+   开始
 ========================= */
 
-function loadCharacters() {
+startBtn.addEventListener("click", startGame);
 
-    if (
-        typeof dataSet === "undefined"
-    ) {
-
-        alert(
-            "data.js 没有成功加载。"
-        );
-
-        return false;
-    }
-
-
-    if (
-        typeof dataSetVersion === "undefined"
-    ) {
-
-        alert(
-            "dataSetVersion 没有找到。"
-        );
-
-        return false;
-    }
-
-
-    if (
-        !dataSet[dataSetVersion]
-    ) {
-
-        alert(
-            "dataSetVersion 对应的数据不存在。"
-        );
-
-        return false;
-    }
-
-
-    const source =
-        dataSet[dataSetVersion]
-            .characterData;
-
-
-    if (
-        !Array.isArray(source)
-    ) {
-
-        alert(
-            "characterData 不是数组。"
-        );
-
-        return false;
-    }
-
-
-    if (
-        source.length < 9
-    ) {
-
-        alert(
-            "角色数量少于9个。"
-        );
-
-        return false;
-    }
-
-
-    characters =
-        source.map(
-            (item, index) => ({
-
-                id: index,
-
-                name:
-                    item.name,
-
-                img:
-                    item.img
-
-            })
-        );
-
-
-    return true;
-}
-
-
-/* =========================
-   开始游戏
-========================= */
-
-startButton.addEventListener(
-    "click",
-    startGame
-);
+againBtn.addEventListener("click", () => {
+  location.reload();
+});
 
 
 function startGame() {
 
-    const loaded =
-        loadCharacters();
+  players = shuffle(characters);
 
+  winners = [];
 
-    if (!loaded) {
+  currentGroups = [];
+  currentGroupIndex = 0;
 
-        return;
+  thirdRoundPlayers = [];
+  thirdRoundWinners = [];
 
-    }
+  rankingPool = [];
+  finalRanking = [];
 
+  locked = false;
 
-    /*
-       你的最终数据应该是59个
-    */
+  showScreen(gameScreen);
 
-    currentPlayers =
-        shuffle(characters);
-
-
-    currentRound = 1;
-
-    nextPlayers = [];
-
-    currentGroupIndex = 0;
-
-
-    startScreen
-        .classList
-        .add("hidden");
-
-
-    resultScreen
-        .classList
-        .add("hidden");
-
-
-    gameScreen
-        .classList
-        .remove("hidden");
-
-
-    createRound();
-
+  startRound1();
 }
 
 
-/* =========================
-   创建轮次
-========================= */
+/* =========================================================
+   第一轮
+   59人
+   14组 × 4人
+   最后3人单独成为一组
+   每组 4选2 / 3选2
+   最终30人
+========================================================= */
 
-function createRound() {
+function startRound1() {
 
-    nextPlayers = [];
+  roundTitle.textContent = "ROUND 1";
+  roundSubtitle.textContent = "4選2";
+  instruction.textContent = "每组选择两张";
 
-    currentGroupIndex = 0;
+  winners = [];
 
+  currentGroups = [];
 
-    /*
-       根据当前人数决定这一轮
-       最终目标：
+  let index = 0;
 
-       59 → 30
-       30 → 15
-       15 → 9
-    */
+  // 14组，每组4人
+  for (let i = 0; i < 14; i++) {
 
-    let target;
+    currentGroups.push(
+      players.slice(index, index + 4)
+    );
 
+    index += 4;
+  }
 
-    if (
-        currentPlayers.length > 30
-    ) {
+  // 剩下3人，重新作为最后一组
+  const remaining = players.slice(index);
 
-        target = 30;
+  if (remaining.length > 0) {
+    currentGroups.push(remaining);
+  }
 
-    }
-    else if (
-        currentPlayers.length > 15
-    ) {
+  currentGroupIndex = 0;
 
-        target = 15;
-
-    }
-    else {
-
-        target = 9;
-
-    }
-
-
-    groups =
-        makeGroups(
-            currentPlayers,
-            target
-        );
-
-
-    updateRoundTitle();
-
-    showCurrentGroup();
-
+  showCurrentGroup();
 }
 
 
-/* =========================
-   创建分组
-========================= */
+/* =========================================================
+   第二轮
+   30人
+   10组 × 3人
+   每组3选2
+   最终20人
+========================================================= */
 
-function makeGroups(
-    players,
-    targetWinners
-) {
+function startRound2() {
 
-    const shuffled =
-        shuffle(players);
+  players = shuffle(winners);
 
+  winners = [];
 
-    const groupCount =
-        targetWinners;
+  currentGroups = [];
 
+  let index = 0;
 
-    const result = [];
+  while (index < players.length) {
 
-    const baseSize =
-        Math.floor(
-            shuffled.length /
-            groupCount
-        );
+    currentGroups.push(
+      players.slice(index, index + 3)
+    );
 
-    const extra =
-        shuffled.length %
-        groupCount;
+    index += 3;
+  }
 
+  currentGroupIndex = 0;
 
-    let index = 0;
+  roundTitle.textContent = "ROUND 2";
+  roundSubtitle.textContent = "3選2";
+  instruction.textContent = "每组三人中选择两张";
 
-
-    for (
-        let i = 0;
-        i < groupCount;
-        i++
-    ) {
-
-        /*
-           尽可能平均分配。
-
-           59 → 30：
-           29个2人组 + 1个1人组
-
-           30 → 15：
-           15个2人组
-
-           15 → 9：
-           6个2人组 + 3个1人组
-        */
-
-        const size =
-            baseSize +
-            (i < extra ? 1 : 0);
-
-
-        const group =
-            shuffled.slice(
-                index,
-                index + size
-            );
-
-
-        index += size;
-
-
-        if (
-            group.length > 0
-        ) {
-
-            result.push(group);
-
-        }
-
-    }
-
-
-    return result;
+  showCurrentGroup();
 }
 
 
-/* =========================
-   顶部文字
-========================= */
-
-function updateRoundTitle() {
-
-    if (
-        currentRound === 1
-    ) {
-
-        roundName.textContent =
-            "ROUND 1";
-
-        roundDescription.textContent =
-            "59 → 30";
-
-    }
-    else if (
-        currentRound === 2
-    ) {
-
-        roundName.textContent =
-            "ROUND 2";
-
-        roundDescription.textContent =
-            "30 → 15";
-
-    }
-    else {
-
-        roundName.textContent =
-            "ROUND 3";
-
-        roundDescription.textContent =
-            "15 → 9";
-
-    }
-
-
-    groupTotal.textContent =
-        groups.length;
-
-}
-
-
-/* =========================
+/* =========================================================
    显示当前组
-========================= */
+========================================================= */
 
 function showCurrentGroup() {
 
-    const group =
-        groups[currentGroupIndex];
+  groupContainer.innerHTML = "";
+
+  locked = false;
+
+  const group = currentGroups[currentGroupIndex];
+
+  if (!group || group.length === 0) {
+    finishCurrentRound();
+    return;
+  }
+
+  const size = group.length;
+
+  if (size === 4) {
+    groupContainer.className = "group-grid-4";
+  }
+
+  else if (size === 3) {
+    groupContainer.className = "group-grid-3";
+  }
+
+  else {
+    groupContainer.className = "group-grid-2v2";
+  }
+
+  group.forEach(character => {
+
+    const card = createCard(character);
+
+    groupContainer.appendChild(card);
+  });
+
+  updateProgress();
+}
 
 
-    groupCurrent.textContent =
-        currentGroupIndex + 1;
+/* =========================
+   创建卡片
+========================= */
+
+function createCard(character) {
+
+  const card = document.createElement("div");
+
+  card.className = "character-card";
+
+  const img = document.createElement("img");
+
+  img.loading = "lazy";
+  img.src = character.img;
+  img.alt = character.name;
+
+  const name = document.createElement("div");
+
+  name.className = "character-name";
+  name.textContent = character.name;
+
+  card.appendChild(img);
+  card.appendChild(name);
+
+  card.addEventListener("click", () => {
+
+    if (locked) return;
+
+    handleSelection(card, character);
+
+  });
+
+  return card;
+}
 
 
-    groupTotal.textContent =
-        groups.length;
+/* =========================================================
+   第一、二轮选择
+========================================================= */
 
+function handleSelection(card, character) {
 
-    const progress =
-        (
-            currentGroupIndex /
-            groups.length
-        ) * 100;
+  const group = currentGroups[currentGroupIndex];
 
+  const required =
+    group.length === 4 ? 2 :
+    group.length === 3 ? 2 :
+    1;
 
-    progressFill.style.width =
-        `${progress}%`;
+  if (card.classList.contains("selected")) {
 
+    card.classList.remove("selected");
 
-    groupContainer.innerHTML = "";
+    const selected =
+      [...groupContainer.querySelectorAll(".selected")];
 
-
-    /*
-       如果这一组只有一个人
-       自动晋级。
-
-       这是为了处理：
-       59→30 和 15→9
-       不能整除的问题。
-    */
-
-    if (
-        group.length === 1
-    ) {
-
-        showSingle(group[0]);
-
-        return;
-
+    if (selected.length < required) {
+      groupContainer
+        .querySelectorAll(".character-card")
+        .forEach(c => {
+          c.classList.remove("eliminated");
+        });
     }
 
+    return;
+  }
 
-    group.forEach(
-        character => {
+  const selected =
+    [...groupContainer.querySelectorAll(".selected")];
 
-            const card =
-                createCharacterCard(
-                    character
-                );
+  if (selected.length >= required) {
+    return;
+  }
 
+  card.classList.add("selected");
 
-            groupContainer
-                .appendChild(card);
+  const nowSelected =
+    [...groupContainer.querySelectorAll(".selected")];
 
-        }
-    );
+  if (nowSelected.length === required) {
 
-}
-
-
-/* =========================
-   创建人物卡
-========================= */
-
-function createCharacterCard(
-    character
-) {
-
-    const card =
-        document.createElement("div");
-
-
-    card.className =
-        "character-card";
-
-
-    const img =
-        document.createElement("img");
-
-
-    img.src =
-        character.img;
-
-    img.alt =
-        character.name;
-
-
-    /*
-       如果图片路径有问题，
-       显示一个明显提示。
-    */
-
-    img.onerror =
-        function () {
-
-            this.alt =
-                "图片加载失败";
-
-        };
-
-
-    const name =
-        document.createElement("div");
-
-
-    name.className =
-        "character-name";
-
-
-    name.textContent =
-        character.name;
-
-
-    card.appendChild(img);
-
-    card.appendChild(name);
-
-
-    card.addEventListener(
-        "click",
-        () => {
-
-            chooseWinner(
-                character,
-                card
-            );
-
-        }
-    );
-
-
-    return card;
-}
-
-
-/* =========================
-   单人自动晋级
-========================= */
-
-function showSingle(character) {
-
-    groupContainer.innerHTML = "";
-
-
-    const card =
-        createCharacterCard(
-            character
-        );
-
-
-    card.classList.add(
-        "single-card"
-    );
-
+    locked = true;
 
     groupContainer
-        .appendChild(card);
+      .querySelectorAll(".character-card")
+      .forEach(other => {
 
-
-    /*
-       单人不用选择，
-       稍微停一下再自动晋级。
-    */
-
-    setTimeout(
-        () => {
-
-            nextPlayers.push(
-                character
-            );
-
-            nextGroup();
-
-        },
-        450
-    );
-
-}
-
-
-/* =========================
-   选择胜者
-========================= */
-
-let choosing = false;
-
-
-function chooseWinner(
-    character,
-    clickedCard
-) {
-
-    if (choosing) {
-
-        return;
-
-    }
-
-
-    choosing = true;
-
-
-    /*
-       把所有卡片锁住
-    */
-
-    const cards =
-        document.querySelectorAll(
-            ".character-card"
-        );
-
-
-    cards.forEach(card => {
-
-        card.style.pointerEvents =
-            "none";
-
-    });
-
-
-    /*
-       被选择的人
-    */
-
-    clickedCard.classList.add(
-        "selected"
-    );
-
-
-    /*
-       其他人淡出
-    */
-
-    cards.forEach(card => {
-
-        if (
-            card !== clickedCard
-        ) {
-
-            card.classList.add(
-                "eliminated"
-            );
-
+        if (!other.classList.contains("selected")) {
+          other.classList.add("eliminated");
         }
 
-    });
+      });
 
+    setTimeout(() => {
 
-    /*
-       等动画结束
-    */
+      const selectedCharacters = [];
 
-    setTimeout(
-        () => {
+      nowSelected.forEach(selectedCard => {
 
-            nextPlayers.push(
-                character
-            );
+        const name =
+          selectedCard.querySelector(".character-name").textContent;
 
-            choosing = false;
+        const found =
+          group.find(item => item.name === name);
 
-            nextGroup();
+        if (found) {
+          selectedCharacters.push(found);
+        }
 
-        },
-        350
-    );
+      });
 
-}
+      winners.push(...selectedCharacters);
 
+      currentGroupIndex++;
 
-/* =========================
-   下一组
-========================= */
-
-function nextGroup() {
-
-    currentGroupIndex++;
-
-
-    if (
-        currentGroupIndex <
-        groups.length
-    ) {
+      if (currentGroupIndex < currentGroups.length) {
 
         showCurrentGroup();
 
-        return;
+      } else {
 
-    }
+        finishCurrentRound();
 
+      }
 
-    /*
-       当前轮全部完成
-    */
-
-    finishRound();
-
+    }, 450);
+  }
 }
 
 
-/* =========================
-   本轮结束
-========================= */
+/* =========================================================
+   第一、二轮结束
+========================================================= */
 
-function finishRound() {
+function finishCurrentRound() {
 
-    /*
-       最终人数应该是：
+  if (roundTitle.textContent === "ROUND 1") {
 
-       ROUND 1 = 30
-       ROUND 2 = 15
-       ROUND 3 = 9
-    */
-
-    if (
-        nextPlayers.length <= 9
-    ) {
-
-        showFinalResult(
-            nextPlayers
-        );
-
-        return;
-
+    // 必须正好30人
+    if (winners.length !== 30) {
+      console.error(
+        "ROUND 1人数错误：",
+        winners.length
+      );
+      return;
     }
 
+    startRound2();
 
-    currentPlayers =
-        shuffle(nextPlayers);
-
-
-    currentRound++;
+    return;
+  }
 
 
-    createRound();
+  if (roundTitle.textContent === "ROUND 2") {
 
+    // 必须正好20人
+    if (winners.length !== 20) {
+      console.error(
+        "ROUND 2人数错误：",
+        winners.length
+      );
+      return;
+    }
+
+    startRound3();
+
+  }
 }
 
 
-/* =========================
-   TOP 9
-========================= */
+/* =========================================================
+   第三轮
+   20人
+   2 VS 2
+   每次从4人中选择2人
+   得到10人
+========================================================= */
 
-function showFinalResult(
-    winners
-) {
+function startRound3() {
 
-    /*
-       最后9个人再随机一次，
-       只是为了让最终展示顺序
-       不固定受分组顺序影响。
-    */
+  thirdRoundPlayers = shuffle(winners);
 
-    const top9 =
-        shuffle(winners);
+  thirdRoundWinners = [];
 
+  currentGroups = [];
 
-    resultContainer.innerHTML = "";
+  for (let i = 0; i < thirdRoundPlayers.length; i += 4) {
 
-
-    top9.forEach(
-        (character, index) => {
-
-            const card =
-                document.createElement(
-                    "div"
-                );
-
-
-            card.className =
-                "result-card";
-
-
-            card.innerHTML = `
-
-                <div class="rank-number">
-                    ${index + 1}
-                </div>
-
-                <img
-                    src="${character.img}"
-                    alt="${character.name}"
-                >
-
-                <div class="result-name">
-                    ${character.name}
-                </div>
-
-            `;
-
-
-            resultContainer
-                .appendChild(card);
-
-        }
+    currentGroups.push(
+      thirdRoundPlayers.slice(i, i + 4)
     );
 
+  }
 
-    progressFill.style.width =
-        "100%";
+  currentGroupIndex = 0;
+
+  roundTitle.textContent = "ROUND 3";
+  roundSubtitle.textContent = "2 VS 2";
+  instruction.textContent = "四张脸中选择两张";
+
+  showThirdRoundGroup();
+}
 
 
-    gameScreen
-        .classList
-        .add("hidden");
+/* =========================
+   第三轮组
+========================= */
+
+function showThirdRoundGroup() {
+
+  groupContainer.innerHTML = "";
+
+  locked = false;
+
+  const group =
+    currentGroups[currentGroupIndex];
+
+  groupContainer.className = "group-grid-2v2";
+
+  group.forEach(character => {
+
+    const card = createThirdRoundCard(character);
+
+    groupContainer.appendChild(card);
+
+  });
+
+  updateProgress();
+}
 
 
-    resultScreen
-        .classList
-        .remove("hidden");
+/* =========================
+   第三轮选择
+========================= */
+
+function createThirdRoundCard(character) {
+
+  const card = document.createElement("div");
+
+  card.className = "character-card";
+
+  const img = document.createElement("img");
+
+  img.loading = "lazy";
+  img.src = character.img;
+  img.alt = character.name;
+
+  const name = document.createElement("div");
+
+  name.className = "character-name";
+  name.textContent = character.name;
+
+  card.appendChild(img);
+  card.appendChild(name);
+
+  card.addEventListener("click", () => {
+
+    if (locked) return;
+
+    const selected =
+      [...groupContainer.querySelectorAll(".selected")];
+
+    if (card.classList.contains("selected")) {
+
+      card.classList.remove("selected");
+
+      return;
+    }
+
+    if (selected.length >= 2) {
+      return;
+    }
+
+    card.classList.add("selected");
+
+    const current =
+      [...groupContainer.querySelectorAll(".selected")];
+
+    if (current.length === 2) {
+
+      locked = true;
+
+      groupContainer
+        .querySelectorAll(".character-card")
+        .forEach(other => {
+
+          if (!other.classList.contains("selected")) {
+            other.classList.add("eliminated");
+          }
+
+        });
+
+      setTimeout(() => {
+
+        const group =
+          currentGroups[currentGroupIndex];
+
+        current.forEach(selectedCard => {
+
+          const selectedName =
+            selectedCard.querySelector(".character-name").textContent;
+
+          const found =
+            group.find(item => item.name === selectedName);
+
+          if (found) {
+            thirdRoundWinners.push(found);
+          }
+
+        });
+
+        currentGroupIndex++;
+
+        if (currentGroupIndex < currentGroups.length) {
+
+          showThirdRoundGroup();
+
+        } else {
+
+          // 20 → 10
+          rankingPool =
+            shuffle(thirdRoundWinners);
+
+          startFinalElimination();
+
+        }
+
+      }, 450);
+    }
+
+  });
+
+  return card;
+}
+
+
+/* =========================================================
+   10人 → 9人
+   先通过一次2 VS 2循环确定10人中的淘汰者
+========================================================= */
+
+function startFinalElimination() {
+
+  roundTitle.textContent = "FINAL";
+  roundSubtitle.textContent = "10 → 9";
+  instruction.textContent = "从这一组中选择两张";
+
+  /*
+    这里把10人分成：
+    2 + 2 + 2 + 2 + 2
+
+    每组2人，进行比较。
+    每组胜者晋级。
+
+    这样得到5人。
+    再用交叉比较重新确定最后的TOP9。
+
+    为了不让一个人直接被随机淘汰，
+    我们使用“最后一人挑战”机制：
+    先得到5人，然后进行连续比较，
+    最终留下9人的排名池。
+  */
+
+  // 实际最终排名采用完整排序机制
+  beginRanking();
+}
+
+
+/* =========================================================
+   最终排名
+   10人进入排序
+   使用连续两两比较建立真实顺序
+   最后一名淘汰，只留下TOP9
+========================================================= */
+
+function beginRanking() {
+
+  rankingPool = shuffle(rankingPool);
+
+  finalRanking = [];
+
+  roundTitle.textContent = "RANKING";
+  roundSubtitle.textContent = "TOP 9";
+  instruction.textContent = "两张脸中选择你更喜欢的一张";
+
+  rankingStep();
+}
+
+
+/* =========================
+   插入排序式排名
+========================= */
+
+let rankCandidate = null;
+let rankIndex = 0;
+
+
+function rankingStep() {
+
+  if (rankingPool.length === 0) {
+
+    showFinalResult();
+
+    return;
+  }
+
+  rankCandidate = rankingPool.shift();
+
+  if (finalRanking.length === 0) {
+
+    finalRanking.push(rankCandidate);
+
+    rankingStep();
+
+    return;
+  }
+
+  rankIndex = 0;
+
+  compareForRanking();
 
 }
 
 
 /* =========================
-   AGAIN
+   排名比较
 ========================= */
 
-againButton.addEventListener(
-    "click",
-    () => {
+function compareForRanking() {
 
-        currentPlayers = [];
+  groupContainer.innerHTML = "";
 
-        nextPlayers = [];
+  groupContainer.className = "group-grid-2v2";
 
-        groups = [];
+  locked = false;
 
-        currentGroupIndex = 0;
+  const opponent =
+    finalRanking[rankIndex];
 
-        currentRound = 1;
+  const cards = [
+    rankCandidate,
+    opponent
+  ];
 
-        choosing = false;
+  cards.forEach(character => {
+
+    const card = document.createElement("div");
+
+    card.className = "character-card";
+
+    const img = document.createElement("img");
+
+    img.loading = "lazy";
+    img.src = character.img;
+    img.alt = character.name;
+
+    const name = document.createElement("div");
+
+    name.className = "character-name";
+    name.textContent = character.name;
+
+    card.appendChild(img);
+    card.appendChild(name);
+
+    card.addEventListener("click", () => {
+
+      if (locked) return;
+
+      locked = true;
+
+      const chosen =
+        character === rankCandidate;
+
+      card.classList.add("selected");
+
+      groupContainer
+        .querySelectorAll(".character-card")
+        .forEach(other => {
+
+          if (other !== card) {
+            other.classList.add("eliminated");
+          }
+
+        });
+
+      setTimeout(() => {
+
+        if (chosen) {
+
+          finalRanking.splice(
+            rankIndex,
+            0,
+            rankCandidate
+          );
+
+          rankCandidate = null;
+
+          rankingStep();
+
+        } else {
+
+          rankIndex++;
+
+          if (rankIndex >= finalRanking.length) {
+
+            finalRanking.push(rankCandidate);
+
+            rankCandidate = null;
+
+            rankingStep();
+
+          } else {
+
+            compareForRanking();
+
+          }
+
+        }
+
+      }, 400);
+
+    });
+
+    groupContainer.appendChild(card);
+
+  });
+
+  updateProgress();
+}
 
 
-        resultScreen
-            .classList
-            .add("hidden");
+/* =========================================================
+   最终只取TOP9
+========================================================= */
+
+function showFinalResult() {
+
+  /*
+    finalRanking 是真实比较产生的顺序。
+    这里不是随机排序。
+  */
+
+  const top9 =
+    finalRanking.slice(0, 9);
+
+  showScreen(resultScreen);
+
+  resultGrid.innerHTML = "";
+
+  top9.forEach((character, index) => {
+
+    const card = document.createElement("div");
+
+    card.className = "result-card";
+
+    const img = document.createElement("img");
+
+    img.src = character.img;
+    img.alt = character.name;
+
+    const rank = document.createElement("div");
+
+    rank.className = "result-rank";
+    rank.textContent = index + 1;
+
+    const name = document.createElement("div");
+
+    name.className = "result-name";
+    name.textContent = character.name;
+
+    card.appendChild(img);
+    card.appendChild(rank);
+    card.appendChild(name);
+
+    resultGrid.appendChild(card);
+
+  });
+}
 
 
-        startScreen
-            .classList
-            .remove("hidden");
+/* =========================
+   进度条
+========================= */
 
-    }
-);
+function updateProgress() {
+
+  let total = currentGroups.length;
+
+  let current = currentGroupIndex;
+
+  if (total <= 0) {
+
+    progressBar.style.width = "0%";
+
+    return;
+
+  }
+
+  const percentage =
+    Math.min(
+      100,
+      (current / total) * 100
+    );
+
+  progressBar.style.width =
+    percentage + "%";
+}
