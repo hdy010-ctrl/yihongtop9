@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOP 9</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div id="app">
+
+    <section id="startPage" class="page">
+        <h1>TOP 9</h1>
+
+        <p>
+            从59张照片中<br>
+            选出你最喜欢的9张
+        </p>
+
+        <button onclick="startGame()">START</button>
+    </section>
+
+    <section id="round1" class="page hidden">
+
+        <h2>初轮淘汰赛</h2>
+
+        <p id="roundInfo"></p>
+
+        <p id="selectedInfo">
+            已选择 0 张
+        </p>
+
+        <div id="group"></div>
+
+        <button onclick="nextGroup()">
+            NEXT
+        </button>
+
+    </section>
+
+    <section id="round2" class="page hidden">
+
+        <h2>第二阶段</h2>
+
+        <p id="battleInfo"></p>
+
+        <p>
+            请按照喜欢程度依次点击两张照片
+        </p>
+
+        <div id="battle"></div>
+
+    </section>
+
+    <section id="result" class="page hidden">
+
+        <h1>TOP 9</h1>
+
+        <div id="resultList"></div>
+
+        <button onclick="location.reload()">
+            再玩一次
+        </button>
+
+    </section>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
