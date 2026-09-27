@@ -64,5 +64,5 @@ dataSet[dataSetVersion].characterData = [
   { name: "韩信", img: "IMG_0920.jpeg", opts: {} },
   { name: "红衣段", img: "d2ecc777cc1cee1b51650e1912aab752.jpeg", opts: {} },
   { name: "袁朗", img: "dcc634ef2bea0f39cb09d8666a529219.jpeg", opts: {} },
-  { name: "田立冬", img: "8da815f63a04e7a6fa4e76f9965d325d.jpeg", opts: {} }
+  { name: "田立冬", img: "8da815f63a04e7a6fa4e76f9965d325d.jpeg", opts: {} },
   { name: "春晚段", img: "IMG_5267.jpeg", opts: {} }];
